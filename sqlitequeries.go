@@ -51,7 +51,7 @@ SET username=?, password=?, email=?, first_name=?, last_name=?,
 	is_superuser=?, is_staff=?, is_active=?, date_joined=?, last_login=?
 WHERE id=?;`
 
-	SQLITE_DELETE_USER = `DELETE FROM $TABLE_NAME$ WHERE id = ?`
+	SQLITE_DELETE_USER = `DELETE FROM $TABLE_NAME$ WHERE id=?;`
 
 	SQLITE_UPDATE_USER_FIELDS = `UPDATE $TABLE_NAME$
 SET $UPDATE_CONTENT$

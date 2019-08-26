@@ -88,22 +88,26 @@ func NewSQLiteBridge() SQLiteBridge {
 	return SQLiteBridge{}
 }
 
-func (b SQLiteBridge) ScanType() interface{} {
+func (b SQLiteBridge) TimeScanType() interface{} {
 	var res time.Time
 	return &res
 }
 
-func (b SQLiteBridge) ConvertScanType(val interface{}) (time.Time, error) {
+func (b SQLiteBridge) ConvertTimeScanType(val interface{}) (time.Time, error) {
 	switch v := val.(type) {
-	case time.Time:
-		return v, nil
 	case *time.Time:
 		return *v, nil
+	case time.Time:
+		return v, nil
 	default:
 		var zeroT time.Time
-		return zeroT, fmt.Errorf("SQLiteBridge.ConvertScanType: Expected value of *time.Time, got %v",
+		return zeroT, fmt.Errorf("SQLiteBridge.ConvertTimeScanType: Expected value of *time.Time, got %v",
 			reflect.TypeOf(val))
 	}
+}
+
+func (b SQLiteBridge) ConvertTime(t time.Time) interface{} {
+	return t
 }
 
 func (b SQLiteBridge) ConvertExistsErr(err error) error {
@@ -118,10 +122,6 @@ func (b SQLiteBridge) ConvertAmbiguousErr(err error) error {
 		return gopherbouncedb.NewAmbiguousCredentials(fmt.Sprintf("unique constrained failed: %v", sqliteErr))
 	}
 	return err
-}
-
-func (b SQLiteBridge) ConvertTime(t time.Time) interface{} {
-	return t
 }
 
 var (
@@ -176,8 +176,6 @@ func (s *SQLiteUserStorage) UpdateUser(id gopherbouncedb.UserID, newCredentials 
 	updateStr := strings.Join(updates, ",")
 	// replace updateStr in UpdateFieldS
 	stmt := strings.Replace(s.UpdateFieldsS, "$UPDATE_CONTENT$", updateStr, 1)
-	fmt.Println(stmt)
-	fmt.Println(args)
 	// execute statement
 	_, err := s.DB.Exec(stmt, args...)
 	if err != nil {
