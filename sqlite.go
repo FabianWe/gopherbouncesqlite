@@ -63,7 +63,7 @@ func (q *SQLiteQueries) GetUser() string {
 }
 
 func (q *SQLiteQueries) GetUserByName() string {
-	return q.GetUserByEmailS
+	return q.GetUserByNameS
 }
 
 func (q *SQLiteQueries) GetUserByEmail() string {
