@@ -54,7 +54,7 @@ func NewSQLiteQueries(replaceMapping map[string]string) *SQLiteQueries {
 	return res
 }
 
-func (q *SQLiteQueries) Init() []string {
+func (q *SQLiteQueries) InitUsers() []string {
 	return q.InitS
 }
 
