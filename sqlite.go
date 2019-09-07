@@ -112,14 +112,14 @@ func (b SQLiteBridge) ConvertTime(t time.Time) interface{} {
 
 func (b SQLiteBridge) ConvertExistsErr(err error) error {
 	if sqliteErr, ok := err.(sqlite.Error); ok && sqliteErr.Code == sqlite.ErrConstraint {
-		return gopherbouncedb.NewUserExists(fmt.Sprintf("unique constrained failed: %v", sqliteErr))
+		return gopherbouncedb.NewUserExists(fmt.Sprintf("unique constrained failed: %s", sqliteErr.Error()))
 	}
 	return err
 }
 
 func (b SQLiteBridge) ConvertAmbiguousErr(err error) error {
 	if sqliteErr, ok := err.(sqlite.Error); ok && sqliteErr.Code == sqlite.ErrConstraint {
-		return gopherbouncedb.NewAmbiguousCredentials(fmt.Sprintf("unique constrained failed: %v", sqliteErr))
+		return gopherbouncedb.NewAmbiguousCredentials(fmt.Sprintf("unique constrained failed: %s", sqliteErr.Error()))
 	}
 	return err
 }
@@ -154,7 +154,7 @@ func (s *SQLiteUserStorage) UpdateUser(id gopherbouncedb.UserID, newCredentials 
 		if colName, has := DefaultSQLiteUserRowNames[fieldName]; has {
 			updates[i] = colName + "=?"
 		} else {
-			return fmt.Errorf("Invalid field name \"%s\": Must be a valid field name of the user model", fieldName)
+			return fmt.Errorf("invalid field name \"%s\": Must be a valid field name of the user model", fieldName)
 		}
 		if arg, argErr := newCredentials.GetFieldByName(fieldName);argErr == nil {
 			fieldName = strings.ToLower(fieldName)
