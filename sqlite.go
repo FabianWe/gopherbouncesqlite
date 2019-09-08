@@ -110,18 +110,18 @@ func (b SQLiteBridge) ConvertTime(t time.Time) interface{} {
 	return t
 }
 
-func (b SQLiteBridge) ConvertExistsErr(err error) error {
+func (b SQLiteBridge) IsDuplicateInsert(err error) bool {
 	if sqliteErr, ok := err.(sqlite.Error); ok && sqliteErr.Code == sqlite.ErrConstraint {
-		return gopherbouncedb.NewUserExists(fmt.Sprintf("unique constrained failed: %s", sqliteErr.Error()))
+		return true
 	}
-	return err
+	return false
 }
 
-func (b SQLiteBridge) ConvertAmbiguousErr(err error) error {
+func (b SQLiteBridge) IsDuplicateUpdate(err error) bool {
 	if sqliteErr, ok := err.(sqlite.Error); ok && sqliteErr.Code == sqlite.ErrConstraint {
-		return gopherbouncedb.NewAmbiguousCredentials(fmt.Sprintf("unique constrained failed: %s", sqliteErr.Error()))
+		return true
 	}
-	return err
+	return false
 }
 
 var (
@@ -156,7 +156,7 @@ func (s *SQLiteUserStorage) UpdateUser(id gopherbouncedb.UserID, newCredentials 
 		} else {
 			return fmt.Errorf("invalid field name \"%s\": Must be a valid field name of the user model", fieldName)
 		}
-		if arg, argErr := newCredentials.GetFieldByName(fieldName);argErr == nil {
+		if arg, argErr := newCredentials.GetFieldByName(fieldName); argErr == nil {
 			fieldName = strings.ToLower(fieldName)
 			if fieldName == "datejoined" || fieldName == "lastlogin" {
 				if t, isTime := arg.(time.Time); isTime {
@@ -177,9 +177,13 @@ func (s *SQLiteUserStorage) UpdateUser(id gopherbouncedb.UserID, newCredentials 
 	// replace updateStr in UpdateFieldS
 	stmt := strings.Replace(s.UpdateFieldsS, "$UPDATE_CONTENT$", updateStr, 1)
 	// execute statement
+	// TODO check error (ambiguous)?
 	_, err := s.DB.Exec(stmt, args...)
 	if err != nil {
-		return s.Bridge.ConvertAmbiguousErr(err)
+		if s.Bridge.IsDuplicateUpdate(err) {
+			return gopherbouncedb.NewAmbiguousCredentials(fmt.Sprintf("unique constraint failed: %s", err.Error()))
+		}
+		return err
 	}
 	return nil
 }
