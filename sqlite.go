@@ -77,7 +77,7 @@ func (q *SQLiteQueries) InsertUser() string {
 }
 
 func (q *SQLiteQueries) UpdateUser(fields []string) string {
-	if len(fields) == 0 {
+	if len(fields) == 0 || !q.SupportsUserFields() {
 		return q.UpdateUserS
 	}
 	updates := make([]string, len(fields))
