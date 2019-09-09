@@ -15,7 +15,7 @@
 package gopherbouncesqlite
 
 const (
-	SQLITE_USERS_INIT = `CREATE TABLE IF NOT EXISTS $USERS_TABLE_NAME$ (
+	SqliteUsersInit = `CREATE TABLE IF NOT EXISTS $USERS_TABLE_NAME$ (
 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 username VARCHAR(150) NOT NULL UNIQUE,
 password VARCHAR(270) NOT NULL,
@@ -29,31 +29,31 @@ date_joined DATETIME NOT NULL,
 last_login DATETIME NOT NULL
 );`
 
-	SQLITE_USERNAME_INDEX = `CREATE UNIQUE INDEX IF NOT EXISTS
+	SqliteUsernameIndex = `CREATE UNIQUE INDEX IF NOT EXISTS
 idx_$USERS_TABLE_NAME$_username ON $USERS_TABLE_NAME$(username);`
 
-	SQLITE_USER_EMAIL_INDEX = `CREATE $EMAIL_UNIQUE$ INDEX IF NOT EXISTS
+	SqliteEmailIndex = `CREATE $EMAIL_UNIQUE$ INDEX IF NOT EXISTS
 idx_$USERS_TABLE_NAME$_email ON $USERS_TABLE_NAME$(email);`
 
-	SQLITE_QUERY_USERID = `SELECT * FROM $USERS_TABLE_NAME$ WHERE id=?;`
+	SqliteQueryUserID = `SELECT * FROM $USERS_TABLE_NAME$ WHERE id=?;`
 
-	SQLITE_QUERY_USERNAME = `SELECT * FROM $USERS_TABLE_NAME$ WHERE username=?;`
+	SqliteQueryUsername = `SELECT * FROM $USERS_TABLE_NAME$ WHERE username=?;`
 
-	SQLITE_QUERY_USERMAIL = `SELECT * FROM $USERS_TABLE_NAME$ WHERE email=?;`
+	SqliteQueryEmail = `SELECT * FROM $USERS_TABLE_NAME$ WHERE email=?;`
 
-	SQLITE_INSERT_USER = `INSERT INTO $USERS_TABLE_NAME$(
+	SqliteInsertUser = `INSERT INTO $USERS_TABLE_NAME$(
 username, password, email, first_name, last_name, is_superuser, is_staff,
 is_active, date_joined, last_login)
 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
 
-	SQLITE_UPDATE_USER = `UPDATE $USERS_TABLE_NAME$
+	SqliteUpdateUser = `UPDATE $USERS_TABLE_NAME$
 SET username=?, password=?, email=?, first_name=?, last_name=?,
 	is_superuser=?, is_staff=?, is_active=?, date_joined=?, last_login=?
 WHERE id=?;`
 
-	SQLITE_DELETE_USER = `DELETE FROM $USERS_TABLE_NAME$ WHERE id=?;`
+	SqliteDeleteUser = `DELETE FROM $USERS_TABLE_NAME$ WHERE id=?;`
 
-	SQLITE_UPDATE_USER_FIELDS = `UPDATE $USERS_TABLE_NAME$
+	SqliteUpdateUserFields = `UPDATE $USERS_TABLE_NAME$
 SET $UPDATE_CONTENT$
 WHERE id = ?;`
 )

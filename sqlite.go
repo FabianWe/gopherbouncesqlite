@@ -24,17 +24,40 @@ import (
 	"strings"
 )
 
+var (
+	DefaultSQLiteUserRowNames = gopherbouncedb.DefaultUserRowNames
+)
+
+// SQLiteQueries implements gopherbouncedb.UserSQL with support for sqlite3.
 type SQLiteQueries struct {
+	// The slice of init statements.
+	// By default contains a create table and two create index (username and email)
+	// statements.
 	InitS                                                                            []string
+	// The default queries.
 	GetUserS, GetUserByNameS, GetUserByEmailS, InsertUserS,
 		UpdateUserS, DeleteUserS, UpdateFieldsS string
+	// The replacer that was used to create the query strings from the strings with
+	// meta variables.
 	Replacer *gopherbouncedb.SQLTemplateReplacer
+	// Used to lookup row names, defaults to DefaultSQLiteUserRowNames.
+	RowNames map[string]string
 }
 
+// DefaultSQLiteReplacer returns the default sql replacer for sqlite3 (see gopherbouncedb.SQLTemplateReplacer).
+// It's the same as gopherbouncedb.DefaultSQLReplacer.
 func DefaultSQLiteReplacer() *gopherbouncedb.SQLTemplateReplacer {
 	return gopherbouncedb.DefaultSQLReplacer()
 }
 
+// NewSQLiteQueries returns new queries given the replacement mapping that is used to update
+// the default replacer.
+//
+// That is it uses the default sqlite3 replacer, but updates the fields given in
+// replaceMapping to overwrite existing values / insert new ones.
+//
+// The initialization queries contain the creation of an index for the username and email
+// If you want to avoid this remove the last two entries from InitS.
 func NewSQLiteQueries(replaceMapping map[string]string) *SQLiteQueries {
 	replacer := DefaultSQLiteReplacer()
 	if replaceMapping != nil {
@@ -43,16 +66,17 @@ func NewSQLiteQueries(replaceMapping map[string]string) *SQLiteQueries {
 	res := &SQLiteQueries{}
 	res.Replacer = replacer
 	// first all init strings
-	res.InitS = append(res.InitS, replacer.Apply(SQLITE_USERS_INIT),
-		replacer.Apply(SQLITE_USERNAME_INDEX),
-		replacer.Apply(SQLITE_USER_EMAIL_INDEX))
-	res.GetUserS = replacer.Apply(SQLITE_QUERY_USERID)
-	res.GetUserByNameS = replacer.Apply(SQLITE_QUERY_USERNAME)
-	res.GetUserByEmailS = replacer.Apply(SQLITE_QUERY_USERMAIL)
-	res.InsertUserS = replacer.Apply(SQLITE_INSERT_USER)
-	res.UpdateUserS = replacer.Apply(SQLITE_UPDATE_USER)
-	res.DeleteUserS = replacer.Apply(SQLITE_DELETE_USER)
-	res.UpdateFieldsS = replacer.Apply(SQLITE_UPDATE_USER_FIELDS)
+	res.InitS = append(res.InitS, replacer.Apply(SqliteUsersInit),
+		replacer.Apply(SqliteUsernameIndex),
+		replacer.Apply(SqliteEmailIndex))
+	res.GetUserS = replacer.Apply(SqliteQueryUserID)
+	res.GetUserByNameS = replacer.Apply(SqliteQueryUsername)
+	res.GetUserByEmailS = replacer.Apply(SqliteQueryEmail)
+	res.InsertUserS = replacer.Apply(SqliteInsertUser)
+	res.UpdateUserS = replacer.Apply(SqliteUpdateUser)
+	res.DeleteUserS = replacer.Apply(SqliteDeleteUser)
+	res.UpdateFieldsS = replacer.Apply(SqliteUpdateUserFields)
+	res.RowNames = DefaultSQLiteUserRowNames
 	return res
 }
 
@@ -82,7 +106,7 @@ func (q *SQLiteQueries) UpdateUser(fields []string) string {
 	}
 	updates := make([]string, len(fields))
 	for i, fieldName := range fields {
-		if colName, has := DefaultSQLiteUserRowNames[fieldName]; has {
+		if colName, has := q.RowNames[fieldName]; has {
 			updates[i] = colName + "=?"
 		} else {
 			panic(fmt.Sprintf("invalid field name \"%s\": Must be a valid field name of gopherbouncedb.UserModel", fieldName))
@@ -101,6 +125,7 @@ func (q *SQLiteQueries) SupportsUserFields() bool {
 	return q.UpdateFieldsS != ""
 }
 
+// SQLiteBridge implements gopherbouncedb.SQLBridge.
 type SQLiteBridge struct{}
 
 func NewSQLiteBridge() SQLiteBridge {
@@ -143,14 +168,15 @@ func (b SQLiteBridge) IsDuplicateUpdate(err error) bool {
 	return false
 }
 
-var (
-	DefaultSQLiteUserRowNames = gopherbouncedb.DefaultUserRowNames
-)
-
+// SQLiteUserStorage is a user storage based on sqlite3.
 type SQLiteUserStorage struct {
 	*gopherbouncedb.SQLUserStorage
 }
 
+// NewSQLiteUserStorage creates a new sqlite user storage given the database connection
+// and the replacement mapping used to create the queries with NewSQLiteQueries.
+//
+// If you want to configure any options please read the gopherbounce wiki.
 func NewSQLiteUserStorage(db *sql.DB, replaceMapping map[string]string) *SQLiteUserStorage {
 	queries := NewSQLiteQueries(replaceMapping)
 	bridge := NewSQLiteBridge()
