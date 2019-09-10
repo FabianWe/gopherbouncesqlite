@@ -36,15 +36,16 @@ func removeDB() {
 	}
 }
 
-type sqliteTestBinding struct{
+type sqliteUserTestBinding struct{
 	db *sql.DB
 }
 
-func newSqliteTestBinding() *sqliteTestBinding {
-	return &sqliteTestBinding{nil}
+
+func newSqliteTestBinding() *sqliteUserTestBinding {
+	return &sqliteUserTestBinding{nil}
 }
 
-func (b *sqliteTestBinding) BeginInstance() gopherbouncedb.UserStorage {
+func (b *sqliteUserTestBinding) BeginInstance() gopherbouncedb.UserStorage {
 	// remove existing file
 	removeDB()
 	// create db
@@ -57,12 +58,13 @@ func (b *sqliteTestBinding) BeginInstance() gopherbouncedb.UserStorage {
 	return storage
 }
 
-func (b *sqliteTestBinding) CloseInstance(s gopherbouncedb.UserStorage) {
+func (b *sqliteUserTestBinding) CloseInstance(s gopherbouncedb.UserStorage) {
 	if closeErr := b.db.Close(); closeErr != nil {
 		panic(fmt.Sprintf("Can't close database: %s", closeErr.Error()))
 	}
 	removeDB()
 }
+
 
 func TestInit(t *testing.T) {
 	testsuite.TestInitSuite(newSqliteTestBinding(), t)
@@ -82,4 +84,56 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	testsuite.TestDeleteUserSuite(newSqliteTestBinding(), true, t)
+}
+
+// Session testing
+
+type sqliteSessionTestBinding struct {
+	db *sql.DB
+}
+
+func newSqliteSessionTestBinding() *sqliteSessionTestBinding {
+	return &sqliteSessionTestBinding{nil}
+}
+
+func (b *sqliteSessionTestBinding) BeginInstance() gopherbouncedb.SessionStorage {
+	removeDB()
+	// create db
+	db, dbErr := sql.Open("sqlite3", dbFile)
+	if dbErr != nil {
+		panic(fmt.Sprintf("Can't create database: %s", dbErr.Error()))
+	}
+	b.db = db
+	return NewSQLiteSessionStorage(db, nil)
+}
+
+func (b *sqliteSessionTestBinding) CloseInstance(storage gopherbouncedb.SessionStorage) {
+	if closeErr := b.db.Close(); closeErr != nil {
+		panic(fmt.Sprintf("Can't close database: %s", closeErr.Error()))
+	}
+	removeDB()
+}
+
+func TestSessionInit(t *testing.T) {
+	testsuite.TestInitSessionSuite(newSqliteSessionTestBinding(), t)
+}
+
+func TestSessionInsert(t *testing.T) {
+	testsuite.TestSessionInsert(newSqliteSessionTestBinding(), t)
+}
+
+func TestSessionGet(t *testing.T) {
+	testsuite.TestSessionGet(newSqliteSessionTestBinding(), t)
+}
+
+func TestSessionDelete(t *testing.T) {
+	testsuite.TestSessionDelete(newSqliteSessionTestBinding(), t)
+}
+
+func TestSessionCleanUp(t *testing.T) {
+	testsuite.TestSessionCleanUp(newSqliteSessionTestBinding(), t)
+}
+
+func TestSessionDeleteForUser(t *testing.T) {
+	testsuite.TestSessionDeleteForUser(newSqliteSessionTestBinding(), t)
 }
