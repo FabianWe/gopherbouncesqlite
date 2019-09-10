@@ -58,7 +58,7 @@ SET $UPDATE_CONTENT$
 WHERE id = ?;`
 
 	SqliteSessionInit = `CREATE TABLE IF NOT EXISTS $SESSIONS_TABLE_NAME$ (
-key VARCHAR(40) NOT NULL PRIMARY KEY,
+session_key VARCHAR(40) NOT NULL PRIMARY KEY,
 user INTEGER NOT NULL,
 expire_date DATETIME NOT NULL,
 CONSTRAINT fk_users
@@ -67,11 +67,11 @@ CONSTRAINT fk_users
 );`
 
 	SqliteInsertSession = `INSERT INTO $SESSIONS_TABLE_NAME$(
-key, user, expire_date) VALUES(?, ?, ?);`
+session_key, user, expire_date) VALUES(?, ?, ?);`
 
-	SqliteGetSession = `SELECT * FROM $SESSIONS_TABLE_NAME$ WHERE key=?;`
+	SqliteGetSession = `SELECT * FROM $SESSIONS_TABLE_NAME$ WHERE session_key=?;`
 
-	SqliteDeleteSession = `DELETE FROM $SESSIONS_TABLE_NAME$ WHERE key=?;`
+	SqliteDeleteSession = `DELETE FROM $SESSIONS_TABLE_NAME$ WHERE session_key=?;`
 
 	SqliteCleanUpSession = `DELETE FROM $SESSIONS_TABLE_NAME$ WHERE expire_date < ?;`
 
