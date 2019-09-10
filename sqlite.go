@@ -250,3 +250,17 @@ func NewSQLiteSessionStorage(db *sql.DB, replaceMapping map[string]string) *SQLi
 	sqlStorage := gopherbouncedb.NewSQLSessionStorage(db, queries, bridge)
 	return &SQLiteSessionStorage{sqlStorage}
 }
+
+// SQLiteStorage combines a user storage and a session storage (both based on sqlite3)
+// to implement gopherbouncedb.GoauthStorage.
+type SQLiteStorage struct {
+	*SQLiteUserStorage
+	*SQLiteSessionStorage
+}
+
+func NewSQLiteStorage(db *sql.DB, replaceMapping map[string]string) *SQLiteStorage {
+	return &SQLiteStorage{
+		NewSQLiteUserStorage(db, replaceMapping),
+		NewSQLiteSessionStorage(db, replaceMapping),
+	}
+}
