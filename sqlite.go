@@ -101,7 +101,6 @@ func DefaultSQLiteReplacer() *gopherbouncedb.SQLTemplateReplacer {
 //
 // The initialization queries don't contain the creation of an index for the username
 //  and email. sqlite automatically creates an index for unique fields in general.
-// If you want to avoid this remove the last two entries from InitS.
 func NewSQLiteUserQueries(replaceMapping map[string]string) *SQLiteUserQueries {
 	replacer := DefaultSQLiteReplacer()
 	if replaceMapping != nil {
@@ -184,12 +183,18 @@ func NewSQLiteUserStorage(db *sql.DB, replaceMapping map[string]string) *SQLiteU
 	return &res
 }
 
+// SqliteSessionQueries implements gopherbouncedb.SessionSQL with support for sqlite3.
 type SqliteSessionQueries struct {
 	InitS []string
 	InsertSessionS, GetSessionS, DeleteSessionS, CleanUpSessionS, DeleteForUserSessionS string
 	Replacer *gopherbouncedb.SQLTemplateReplacer
 }
 
+// NewSqliteSessionQueries returns new queries given the replacement mapping that is used to update
+// the default replacer.
+//
+// That is it uses the default sqlite3 replacer, but updates the fields given in
+// replaceMapping to overwrite existing values / insert new ones.
 func NewSqliteSessionQueries(replaceMapping map[string]string) *SqliteSessionQueries {
 	replacer := DefaultSQLiteReplacer()
 	if replaceMapping != nil {
@@ -230,10 +235,15 @@ func (q *SqliteSessionQueries) DeleteForUserSession() string {
 	return q.DeleteForUserSessionS
 }
 
+// SQLiteSessionStorage is as session storage based on sqlite3.
 type SQLiteSessionStorage struct {
 	*gopherbouncedb.SQLSessionStorage
 }
 
+// NewSQLiteSessionStorage creates a new sqlite session storage given the database connection
+// and the replacement mapping used to create the queries with NewSqliteSessionQueries.
+//
+// If you want to configure any options please read the gopherbounce wiki.
 func NewSQLiteSessionStorage(db *sql.DB, replaceMapping map[string]string) *SQLiteSessionStorage {
 	queries := NewSqliteSessionQueries(replaceMapping)
 	bridge := NewSQLiteBridge()
