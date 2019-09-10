@@ -57,7 +57,7 @@ func (b *sqliteTestBinding) BeginInstance() gopherbouncedb.UserStorage {
 	return storage
 }
 
-func (b *sqliteTestBinding) ClosteInstance(s gopherbouncedb.UserStorage) {
+func (b *sqliteTestBinding) CloseInstance(s gopherbouncedb.UserStorage) {
 	if closeErr := b.db.Close(); closeErr != nil {
 		panic(fmt.Sprintf("Can't close database: %s", closeErr.Error()))
 	}
