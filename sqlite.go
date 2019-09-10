@@ -258,6 +258,7 @@ type SQLiteStorage struct {
 	*SQLiteSessionStorage
 }
 
+// NewSQLiteStorage returns a new SQLiteStorage.
 func NewSQLiteStorage(db *sql.DB, replaceMapping map[string]string) *SQLiteStorage {
 	return &SQLiteStorage{
 		NewSQLiteUserStorage(db, replaceMapping),
