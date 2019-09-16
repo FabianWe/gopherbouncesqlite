@@ -79,7 +79,7 @@ type SQLiteUserQueries struct {
 	InitS                                                                            []string
 	// The default queries.
 	GetUserS, GetUserByNameS, GetUserByEmailS, InsertUserS,
-		UpdateUserS, DeleteUserS, UpdateFieldsS string
+		UpdateUserS, DeleteUserS, UpdateFieldsS, ListUsersS string
 	// The replacer that was used to create the query strings from the strings with
 	// meta variables.
 	Replacer *gopherbouncedb.SQLTemplateReplacer
@@ -117,6 +117,7 @@ func NewSQLiteUserQueries(replaceMapping map[string]string) *SQLiteUserQueries {
 	res.UpdateUserS = replacer.Apply(SqliteUpdateUser)
 	res.DeleteUserS = replacer.Apply(SqliteDeleteUser)
 	res.UpdateFieldsS = replacer.Apply(SqliteUpdateUserFields)
+	res.ListUsersS = replacer.Apply(SqliteListUsers)
 	res.RowNames = DefaultSQLiteUserRowNames
 	return res
 }
@@ -160,6 +161,10 @@ func (q *SQLiteUserQueries) UpdateUser(fields []string) string {
 
 func (q *SQLiteUserQueries) DeleteUser() string {
 	return q.DeleteUserS
+}
+
+func (q *SQLiteUserQueries) ListUsers() string {
+	return q.ListUsersS
 }
 
 func (q *SQLiteUserQueries) SupportsUserFields() bool {
@@ -252,7 +257,7 @@ func NewSQLiteSessionStorage(db *sql.DB, replaceMapping map[string]string) *SQLi
 }
 
 // SQLiteStorage combines a user storage and a session storage (both based on sqlite3)
-// to implement gopherbouncedb.GoauthStorage.
+// to implement gopherbouncedb.Storage.
 type SQLiteStorage struct {
 	*SQLiteUserStorage
 	*SQLiteSessionStorage
